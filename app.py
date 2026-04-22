@@ -1,17 +1,15 @@
+from __future__ import annotations
+
 from dotenv import load_dotenv
 load_dotenv()
 
-from __future__ import annotations
-
 from pathlib import Path
-
 from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from job_store import JobStore
 from pipeline_service import PipelineOrchestrator
-
 
 app = FastAPI(title="Excel to PDF Pipeline")
 job_store = JobStore()
