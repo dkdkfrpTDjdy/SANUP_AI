@@ -3,6 +3,8 @@ from __future__ import annotations
 from dotenv import load_dotenv
 load_dotenv()
 import re
+import uuid
+import tempfile
 import contextlib
 import importlib.util
 import io
