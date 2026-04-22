@@ -52,16 +52,35 @@ class LineBufferedLogger(io.TextIOBase):
             self._emit(line)
         return len(text)
 
-    def flush(self) -> None:
-        if self._buffer:
-            self._emit(self._buffer)
-            self._buffer = ""
-        self.log_file.flush()
+    def flush(self):
+        try:
+            if getattr(self, "log_file", None) and not self.log_file.closed:
+                self.log_file.flush()
+        except Exception:
+            pass
 
-    def close(self) -> None:
-        self.flush()
-        self.log_file.close()
-        super().close()
+        try:
+            super().flush()
+        except Exception:
+            pass
+
+
+    def close(self):
+        try:
+            self.flush()
+        except Exception:
+            pass
+
+        try:
+            if getattr(self, "log_file", None) and not self.log_file.closed:
+                self.log_file.close()
+        except Exception:
+            pass
+
+        try:
+            super().close()
+        except Exception:
+            pass
 
     def _emit(self, line: str) -> None:
         cleaned = line.rstrip("\r")
@@ -137,19 +156,19 @@ class PipelineOrchestrator:
         logger = LineBufferedLogger(self.job_store, job_id, log_path)
         try:
             self._validate_legacy_scripts()
-            self.job_store.update_step(job_id, status="running", current_step="Python 파일 A 실행 중", progress=20)
+            self.job_store.update_step(job_id, status="running", current_step="임대대수 전처리 실행 중", progress=20)
             self.job_store.append_log(job_id, f"[INFO] legacy A 호출: {LEGACY_SCRIPT_A}")
             self._run_legacy_a(job_id, Path(job.stored_input_path), output_excel, logger)
 
             if not output_excel.exists():
-                raise FileNotFoundError(f"파일 A 실행 후 output Excel이 생성되지 않았습니다: {output_excel}")
+                raise FileNotFoundError(f"임대대수 전처리 실행 후 대시보드가 생성되지 않았습니다: {output_excel}")
 
-            self.job_store.update_step(job_id, status="running", current_step="Python 파일 B 실행 중", progress=65)
-            self.job_store.append_log(job_id, f"[INFO] legacy B 호출: {LEGACY_SCRIPT_B}")
+            self.job_store.update_step(job_id, status="running", current_step="PDF 생성 중", progress=65)
+            self.job_store.append_log(job_id, f"[INFO] PDF 생성: {LEGACY_SCRIPT_B}")
             self._run_legacy_b(job_id, output_excel, output_pdf)
 
             if not output_pdf.exists():
-                raise FileNotFoundError(f"파일 B 실행 후 PDF가 생성되지 않았습니다: {output_pdf}")
+                raise FileNotFoundError(f"PDF가 생성되지 않았습니다: {output_pdf}")
 
             self.job_store.mark_completed(job_id, pdf_path=str(output_pdf), excel_path=str(output_excel))
             self.job_store.append_log(job_id, f"[INFO] 완료: PDF={output_pdf}")
@@ -235,9 +254,9 @@ class PipelineOrchestrator:
             return "파이프라인 실행에 실패했습니다. 로그를 확인해 주세요."
 
         if "필수 컬럼 누락" in message:
-            return f"업로드한 Excel 형식이 기존 로직 기대치와 다릅니다. {message}"
+            return f"업로드한 Excel 형식이 기존 로직의 형식과 다릅니다. {message}"
         if "정제RAW 시트가 최소 2개" in message:
-            return "파일 A 결과에서 정제RAW 시트가 부족하여 PDF를 생성할 수 없습니다."
+            return "임대대수 파일의 정제RAW 시트가 부족하여 PDF를 생성할 수 없습니다."
         if "BEDROCK_MODEL_ID" in message:
-            return "Bedrock/Nova 설정값이 없어서 LLM 단계가 실패했습니다. 기존 fallback이 동작하도록 로그를 확인해 주세요."
+            return "AI 설정값이 없어서 LLM 단계가 실패했습니다."
         return message
