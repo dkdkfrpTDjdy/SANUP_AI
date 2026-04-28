@@ -188,6 +188,8 @@ uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 
 Docker 방식은 WeasyPrint 의존성 문제를 줄이는 데 유리하다.
 
+SANUP_AI indexing test 2026-04-28
+
 ---
 
 ## 운영 메모
